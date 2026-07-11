@@ -42,7 +42,6 @@ end
 function ffmpeg.cmd(cfg, args)
   local cmd = cfg.ffmpeg_path
   local flags = ffmpeg.rewrite_dest(cfg, args)
-  print(cmd .. flags)
   ssh.cmd(cfg, cmd, flags)
 end
 
