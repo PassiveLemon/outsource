@@ -15,6 +15,7 @@
     perSystem = { self', system, ... }:
     let
       pkgs = import inputs.nixpkgs { inherit system; };
+      # lib = pkgs.lib;
     in
     {
       devShells = {
@@ -26,7 +27,12 @@
             self'.packages.default.nativeBuildInputs
             self'.packages.default.buildInputs
           ];
+            # export ANTENNA_SSH_PATH="${lib.getExe pkgs.openssh}"
+            # export ANTENNA_SSH_FLAGS="placeholder"
+            # export ANTENNA_FFMPEG_PATH="${lib.getExe pkgs.ffmpeg_7}"
           shellHook = ''
+            export ANTENNA_SOURCE_DIR="/test/source/replacement"
+            export ANTENNA_DEST_DIR="/test/dest/replacement"
             alias editor="lite-xl $PWD &"
             alias nr="nix run"
           '';
