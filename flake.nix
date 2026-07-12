@@ -31,7 +31,6 @@
             self'.packages.default.nativeBuildInputs
             self'.packages.default.buildInputs
           ];
-          # export ANTENNA_MAP_DIRS="/test/data//source/replacement/works;/test/config//dest/replacement/works"
           shellHook = ''
             export ANTENNA_SSH_PATH="${lib.getExe pkgs.openssh}"
             export ANTENNA_SSH_HOST="lemon@silver"
