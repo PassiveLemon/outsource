@@ -20,8 +20,12 @@
     {
       devShells = {
         default = pkgs.mkShell {
-          packages = with pkgs; [
-            lua
+          packages = let
+            luaEnv = pkgs.luajit.withPackages (ps: with ps; ([
+              luaposix
+            ]));
+          in [
+            luaEnv
           ];
           packagesFrom = [
             self'.packages.default.nativeBuildInputs
