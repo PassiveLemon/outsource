@@ -15,7 +15,6 @@
     perSystem = { self', system, ... }:
     let
       pkgs = import inputs.nixpkgs { inherit system; };
-      lib = pkgs.lib;
     in
     {
       devShells = {
@@ -32,7 +31,7 @@
             self'.packages.default.buildInputs
           ];
           shellHook = ''
-            export ANTENNA_SSH_PATH="${lib.getExe pkgs.openssh}"
+            export ANTENNA_SSH_PATH="/run/current-system/sw/bin/ssh"
             export ANTENNA_SSH_HOST="lemon@silver"
             export ANTENNA_FFMPEG_PATH="/run/current-system/sw/bin/ffmpeg"
             export ANTENNA_FFPROBE_PATH="/run/current-system/sw/bin/ffprobe"

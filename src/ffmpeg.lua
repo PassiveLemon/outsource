@@ -39,7 +39,7 @@ function ffmpeg.cmd(cfg, args)
     cmd = cfg.ffprobe_path
   end
   local flags = ffmpeg.rewrite_paths(cfg, args)
-  session = ssh.cmd(cfg, cmd, flags)
+  local session = ssh.cmd(cfg, cmd, flags)
   if not session then
     print("Warning: remote ffmpeg command failed, running locally...")
     session = ffmpeg.local_ffmpeg(cmd, flags)

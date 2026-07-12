@@ -1,6 +1,7 @@
 { lib
 , stdenv
 , lua
+, makeWrapper
 }:
 let
   luaEnv = lua.withPackages (ps: with ps; ([
@@ -15,13 +16,21 @@ stdenv.mkDerivation (finalAttrs: {
 
   strictDeps = true;
 
+  nativeBuildInputs = [ makeWrapper ];
   buildInputs = [ luaEnv ];
 
   installPhase = ''
     runHook preInstall
 
-    mkdir $out/bin
-    cp $src/* $out/bin
+    output=$out/lib/lua/${lua.luaversion}/antenna
+    mkdir -p $output
+    mkdir -p $out/bin
+
+    cp -r $src/src/* $output
+    ln -s $output/antenna.lua $out/bin/.antenna-wrapped
+
+    makeWrapper "$out/bin/.antenna-wrapped" "$out/bin/antenna" \
+      --set LUA_PATH "$output/?.lua"
 
     runHook postInstall
   '';
