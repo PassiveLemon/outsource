@@ -21,7 +21,7 @@
       devShells = {
         default = pkgs.mkShell {
           packages = let
-            luaEnv = pkgs.luajit.withPackages (ps: with ps; ([
+            luaEnv = pkgs.lua.withPackages (ps: with ps; ([
               luaposix
             ]));
           in [

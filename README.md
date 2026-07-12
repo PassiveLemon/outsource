@@ -1,23 +1,25 @@
 # antenna
 Run FFmpeg commands on another host, with directory mapping
 
-# Limitations
+## Limitations
 While Antenna allows you to run FFmpeg commands on another host, you need to be aware of the hardware capabilities of both. Antenna is effectively an FFmpeg proxy, not a load-balancer (though this may change in the future).
 For example, Antenna can be used to enable hardware transcoding for Jellyfin if the host machine doesn't have a GPU. However, if the client is inaccessible or the SSH calls fail and requires the host to fall back to local FFmpeg calls, then that GPU is no longer available and the local calls will fail.
 
 # Usage
 ## Requirements
-Luajit with luaposix
+Lua with luaposix
 
 ## Host
 The host requires Antenna and some way to share directories with the client, such as NFS or SMB. The share is so the output files are accessible back on the host.
 
-For FFprobe to work, the Antenna symlink name must be "ffprobe". This is not required for FFmpeg, but is still recommended.
-
 Create a symlink from the expected ffmpeg/ffprobe locations to antenna.lua, for example:
 `/usr/local/jellyfin-ffmpeg/ffmpeg` -> `/path/to/antenna.lua`
 
+For FFprobe to work, the Antenna symlink name must be "ffprobe". This is not required for FFmpeg, but is still recommended.
+
 Configure your environment variables. You will need to set `ANTENNA_SSH_HOST` and probably `ANTENNA_SSH_ID` but, depending on your setup, you may not need to set any others.
+Host should be in SSH format, eg: `ANTENNA_SSH_ID="<user>@<host>"`
+By default, `ANTENNA_SSH_ID` will check in the calling user's `$HOME/.ssh` for `id_ed25519`. It just needs an identity that can SSH into the client WITHOUT a password, otherwise the SSH calls will hang.
 
 Host-to-client directory mapping is optional, but requires the `ANTENNA_MAP_DIRS` variable to use.
 First, determine where you want to map. You can easily determine this by checking the FFmpeg calls themselves. For example:

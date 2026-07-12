@@ -2,6 +2,11 @@
 , stdenv
 , lua
 }:
+let
+  luaEnv = lua.withPackages (ps: with ps; ([
+    luaposix
+  ]));
+in
 stdenv.mkDerivation (finalAttrs: {
   pname = "antenna";
   version = "0.1.0";
@@ -10,9 +15,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   strictDeps = true;
 
-  buildInputs = [
-    lua
-  ];
+  buildInputs = [ luaEnv ];
 
   installPhase = ''
     runHook preInstall
