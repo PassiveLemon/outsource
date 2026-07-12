@@ -27,14 +27,16 @@
             self'.packages.default.nativeBuildInputs
             self'.packages.default.buildInputs
           ];
-          # export ANTENNA_FFMPEG_PATH="${lib.getExe pkgs.ffmpeg_7}"
-          # export ANTENNA_SSH_PATH="${lib.getExe pkgs.openssh}"
-          # export ANTENNA_SSH_FLAGS="-i /home/lemon/.ssh/id_ed25519 lemon@silver"
-          # export ANTENNA_SOURCE_DIR="/test/source/replacement"
-          # export ANTENNA_DEST_DIR="/test/dest/replacement"
+          # export ANTENNA_SSH_FLAGS=""
           shellHook = ''
+            export ANTENNA_SSH_PATH="${lib.getExe pkgs.openssh}"
+            export ANTENNA_SSH_HOST="lemon@silver"
+            export ANTENNA_FFMPEG_PATH="/run/current-system/sw/bin/ssh"
+            export ANTENNA_SOURCE_DIR="/source/replacement/works"
+            export ANTENNA_DEST_DIR="/dest/replacement/works"
             alias editor="lite-xl $PWD &"
             alias nr="nix run"
+            export ANTENNA_TEST='-i file:"/test/data/file-in.mp4" -hls_segment_filename "/test/config/file-out.mp4"'
           '';
         };
       };
