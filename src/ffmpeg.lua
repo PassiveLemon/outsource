@@ -9,10 +9,10 @@ local ffmpeg = { }
 function ffmpeg.rewrite_paths(cfg, args)
   for path_map in cfg.map_dirs:gmatch("[^;]+") do
     local from = path_map:match('^(.-)//')
-    local to = path_map:match('/(/.-)$')
-    log.debug("Mapping " .. from .. " to " .. to)
-    for i, _ in ipairs(args) do
-      args[i] = args[i]:gsub(from, to)
+    local to = path_map:match('/(/.-)/?$')
+    log.debug("Mapping '" .. from .. "' to '" .. to .. "'")
+    for i, flag in ipairs(args) do
+      args[i] = flag:gsub(from, to)
     end
   end
   return args
@@ -34,15 +34,15 @@ end
 
 -- The ffmpeg command to run
 function ffmpeg.cmd(cfg, args)
-  log.info("Received " .. table.concat(args, " "))
-  -- Remove cmd from args table
   args[0] = nil
+  log.info("[" .. cfg.mode .. "] Received '" .. table.concat(args, " ") .. "'")
+  -- Remove cmd from args table
   local cmd = cfg.ffmpeg_path
   if string.lower(cfg.mode) == "ffprobe" then
     cmd = cfg.ffprobe_path
   end
   local flags = ffmpeg.rewrite_paths(cfg, args)
-  log.info("Sending " .. table.concat(args, " "))
+  log.info("[" .. cfg.mode .. "] Sending '" .. table.concat(flags, " ") .. "'")
   local session = ssh.cmd(cfg, cmd, flags)
   if not session then
     log.warn("Remote FFmpeg command failed, running locally...")

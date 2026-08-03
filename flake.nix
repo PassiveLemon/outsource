@@ -18,8 +18,7 @@
     in
     {
       devShells = {
-        default = self'.devShells.outsource;
-        outsource = pkgs.mkShell {
+        default = pkgs.mkShell {
           packages = let
             luaEnv = pkgs.lua.withPackages (ps: with ps; ([
               luaposix
@@ -36,7 +35,7 @@
             export OUTSOURCE_SSH_HOST="lemon@silver"
             export OUTSOURCE_FFMPEG_PATH="/run/current-system/sw/bin/ffmpeg"
             export OUTSOURCE_FFPROBE_PATH="/run/current-system/sw/bin/ffprobe"
-            export OUTSOURCE_MAP_DIRS="/data/shows//mnt/titanium/Media/Shows;/config//mnt/titanium/docker/volumes/streaming/Jellyfin"
+            export OUTSOURCE_MAP_DIRS="/data//mnt/titanium/Media/;/config//mnt/titanium/docker/volumes/streaming/Jellyfin/"
             export OUTSOURCE_LOG_LEVEL="debug"
             alias editor="lite-xl $PWD &"
             alias nr="nix run"
