@@ -71,17 +71,3 @@ This means that you may need to put NFS shares in a couple places on the clients
 This gets more complicated when used in a Docker container because bind mounts are often at locations like `/data` or `/config`, not default root directories.
 Rewriting paths solves this by allowing any host directory to point to any client directory, which means that the NFS shares can be put in a more appropriate client-specific location.
 
-# Todo
-Todo:
-- General
-  - [x] Env var configuration to avoid using flags
-  - [x] Logging
-- [x] SSH
-  - [x] Run commands
-  - [ ] Reuse session? Instead of creating an SSH connection for each call, just send commands to an existing session
-  - [ ] Start an SFTP share from the host to client?
-- [x] FFmpeg
-  - [x] Rewrite paths
-  - [x] FFprobe
-  - [x] Fallback to local ffmpeg if remote fails
-
