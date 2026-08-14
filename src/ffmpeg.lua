@@ -4,7 +4,18 @@ local ssh = require("ssh")
 local posix = require("posix")
 
 local ffmpeg = {
-  hardware_flags = { "-init_hw_device", "-filter_hw_device" },
+  remove_flags = {
+    "^-init_hw_device$",
+    "^-filter_hw_device$",
+    "^-hwaccel$",
+    "^-hwaccel_device$",
+    "^-hwaccel_output_format$",
+  },
+  switch_flags = {
+    -- Check if the value is a hardware type before switching
+    -- ["^-codec:v:?%d*$"] = "libx265",
+    -- ["^-preset$"] = "medium",
+  },
 }
 
 -- Rewrite paths and return all FFmpeg args
@@ -21,16 +32,27 @@ function ffmpeg.rewrite_paths(cfg, args)
 end
 
 -- Remove hardware flags from FFmpeg args
-function ffmpeg.no_hardware(_, args)
-  -- Detect the flag first, then remove it and it's value
-  for k, _ in pairs(ffmpeg.hardware_flags) do
+function ffmpeg.no_hardware(args)
+  -- Remove specific flags and values entirely
+  for _, v in pairs(ffmpeg.remove_flags) do
     for i, flag in ipairs(args) do
       local tack = args[i]
       local value = args[i+1]
-      if flag:match(k) then
+      if flag:match(v) then
         log.debug("Removing hardware flag: '" .. tack .. " " .. value .. "'")
         table.remove(args, (i+1))
         table.remove(args, i)
+      end
+    end
+  end
+  -- Switch certain flags to software safe values
+  for k, v in pairs(ffmpeg.switch_flags) do
+    for i, flag in ipairs(args) do
+      if flag:match(k) then
+        local tack = args[i]
+        local value = args[i+1]
+        log.debug("Switching hardware flag: '" .. tack .. " " .. value .. " to " .. v .. "'")
+        args[i+1] = v
       end
     end
   end
@@ -65,7 +87,8 @@ function ffmpeg.cmd(cfg, args)
   local session = ssh.cmd(cfg, cmd, flags)
   if not session then
     log.warn("Remote FFmpeg command failed, running locally...")
-    flags = ffmpeg.no_hardware(cfg, args)
+    flags = ffmpeg.no_hardware(args)
+    log.info("[" .. cfg.mode .. " local fallback ] Sending '" .. table.concat(flags, " ") .. "'")
     session = ffmpeg.local_ffmpeg(cmd, flags)
   end
   return session
