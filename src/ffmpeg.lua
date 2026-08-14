@@ -13,9 +13,23 @@ local ffmpeg = {
     "^-hwaccel_output_format$",
   },
   switch_flags = {
-    -- Check if the value is a hardware type before switching
-    -- ["^-codec:v:?%d*$"] = "libx265",
-    -- ["^-preset$"] = "medium",
+    -- These are only applied if the flag is using a hardware specific value
+    ["^-codec:v:?%d*$"] = "libx265",
+    ["^-preset$"] = "medium",
+  },
+  codec_types = {
+    ["nvidia"] = {
+      "^h264_nvenc$",
+      "^hevc_nvenc$",
+      "^av1_nvenc$",
+    },
+    ["amd"] = { },
+    ["intel"] = { },
+  },
+  preset_types = {
+    ["nvidia"] = { "^p1$" },
+    ["amd"] = { },
+    ["intel"] = { },
   },
 }
 
@@ -34,23 +48,36 @@ function ffmpeg.rewrite_paths(cfg, args)
   return args
 end
 
--- Remove hardware flags from FFmpeg args
+-- Change or remove hardware flags from FFmpeg args
 function ffmpeg.no_hardware(args)
+  -- Change certain flags to software safe values
+  local hardware = ""
+  for k, sf in pairs(ffmpeg.switch_flags) do
+    for f, v, pair in parse.arg_itr(args) do
+      -- Determine the hardware once
+      if hardware == "" then
+        for c in pairs(ffmpeg.codec_types) do
+          for _, e in ipairs(ffmpeg.codec_types[c]) do
+            if (v or ""):match(e) then
+              log.debug("Detected " .. c)
+              hardware = c
+              break
+            end
+          end
+        end
+      end
+      if f:match(k) and (hardware ~= "") then
+        log.debug("Changing hardware flag: '" .. f .. " " .. v .. " to " .. sf .. "'")
+        pair.value = sf
+      end
+    end
+  end
   -- Remove specific flags and values entirely
   for _, rf in ipairs(ffmpeg.remove_flags) do
     for f, v, pair in parse.arg_itr(args) do
       if f:match(rf) then
         log.debug("Removing hardware flag: '" .. f .. " " .. v .. "'")
         pair.value = ""
-      end
-    end
-  end
-  -- Change certain flags to software safe values
-  for k, sf in pairs(ffmpeg.switch_flags) do
-    for f, v, pair in parse.arg_itr(args) do
-      if f:match(k) and (hardware ~= "") then
-        log.debug("Changing hardware flag: '" .. f .. " " .. v .. " to " .. sf .. "'")
-        pair.value = sf
       end
     end
   end
