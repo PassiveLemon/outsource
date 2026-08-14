@@ -1,10 +1,6 @@
 # Outsource
 Outsource your FFmpeg calls to a different machine, with directory mapping
 
-## Limitations
-While Outsource allows you to run FFmpeg commands on another host, you need to be aware of the hardware capabilities of both. Outsource is effectively an FFmpeg proxy, not a load-balancer (though this may change in the future).
-For example, Outsource can be used to enable hardware transcoding for Jellyfin if the host machine doesn't have a GPU. However, if the client is inaccessible or the SSH calls fail and requires the host to fall back to local FFmpeg calls, then that GPU is no longer available and the local calls will fail.
-
 # Usage
 Requirements:
 - Lua with luaposix
@@ -29,6 +25,7 @@ This is an FFmpeg input flag `-i file:"/data/shows/Breaking Bad/Season 01/S01E01
 Note the double-slash, it is necessary to separate out the host and client paths. If you want to map multiple directories, then separate them with a semicolon (;) like so: `/host/location1//client/location1;/host/location2//client/location2`
 
 Outsource can also fallback to local FFmpeg if the client fails in any way. Ensure that `OUTSOURCE_FFMPEG_ALLBACK_PATH` and `OUTSOURCE_FFPROBE_FALLBACK_PATH` are set to an actual FFmpeg/FFprobe binary on the host system and NOT the Outsource link.
+When it does so, it will attempt to remove or change hardware specific arguments to software safe values to ensure the fallback call works. Otherwise, it may try using hardware that doesn't exist on the host. However, FFmpeg is complicated so this may not always work.
 
 By default, Outsource will attempt to log everything to `/tmp/outsource/log.txt` (`OUTSOURCE_LOG_DIR`) and the logging level can be changed with `OUTSOURCE_LOG_LEVEL`. If you want to disable logging, set the level to "none". Just note that Outsource doesn't manage the size of the logs so you need to ensure they clear automatically.
 
@@ -66,8 +63,11 @@ built with gcc 15.2.0 (GCC)
 
 # Other
 Outsource's creation was inspired by some limitations with [rffmpeg](https://github.com/joshuaboniface/rffmpeg).
-Currently, rffmpeg will redirect ffmpeg calls verbatim, meaning that input/output paths need to be the same on both systems.
-This means that you may need to put NFS shares in a couple places on the clients filesystem to ensure all internal host paths are mapped correctly.
+Currently, rffmpeg will redirect ffmpeg calls verbatim which causes a few issues.
+Input/output paths need to be the same on both systems so you may need to put NFS shares in a couple places on the clients filesystem to ensure all internal host paths are mapped correctly.
 This gets more complicated when used in a Docker container because bind mounts are often at locations like `/data` or `/config`, not default root directories.
 Rewriting paths solves this by allowing any host directory to point to any client directory, which means that the NFS shares can be put in a more appropriate client-specific location.
+
+Additionally, calls to the fallback binary often fail due to the calls containing arguments for hardware, which may not exist on the host.
+Outsource, when calling the fallback binary, will attempt to remove or change hardware specific arguments to software safe values to ensure the fallback works. However, FFmpeg is complicated so this may not always work.
 

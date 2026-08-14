@@ -1,22 +1,23 @@
 local log = require("log")
+local parse = require("parse")
 
 local posix = require("posix")
 
 local ssh = { }
 
--- Set up the SSH path, flags, and ffmpeg command for running
+-- Set up the SSH path, flags, and FFmpeg command for running
 function ssh.setup_args(cfg, cmd, args)
-  local call_args = { cfg.ssh_path }
-  local ssh_flags = { "-i", cfg.ssh_id, cfg.ssh_host }
-  for _, v in ipairs(ssh_flags) do
-    table.insert(call_args, v)
-  end
+  local call_args = { cfg.ssh_path, "-i", cfg.ssh_id, cfg.ssh_host }
   local remote = { cmd }
   -- Escape each ffmpeg argument for SSH
   if args then
-    for _, arg in ipairs(args) do
-      local escaped_arg = "'" .. arg:gsub("'", [['"'"']]) .. "'"
-      table.insert(remote, escaped_arg)
+    for f, v in parse.arg_itr(args) do
+      local escaped_flag = "'" .. f .. "'"
+      table.insert(remote, escaped_flag)
+      if v and (v ~= "") then
+        local escaped_value = "'" .. v:gsub("'", [['"'"']]) .. "'"
+        table.insert(remote, escaped_value)
+      end
     end
   end
   table.insert(call_args, table.concat(remote, " "))
