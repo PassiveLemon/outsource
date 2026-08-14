@@ -1,4 +1,5 @@
 local log = require("log")
+local parse = require("parse")
 local ssh = require("ssh")
 
 local posix = require("posix")
@@ -24,8 +25,10 @@ function ffmpeg.rewrite_paths(cfg, args)
     local from = path_map:match('^(.-)//')
     local to = path_map:match('/(/.-)/?$')
     log.debug("Mapping '" .. from .. "' to '" .. to .. "'")
-    for i, flag in ipairs(args) do
-      args[i] = flag:gsub(from, to)
+    for _, v, pair in parse.arg_itr(args) do
+      if v then
+        pair.value = v:gsub(from, to)
+      end
     end
   end
   return args
@@ -34,25 +37,20 @@ end
 -- Remove hardware flags from FFmpeg args
 function ffmpeg.no_hardware(args)
   -- Remove specific flags and values entirely
-  for _, v in pairs(ffmpeg.remove_flags) do
-    for i, flag in ipairs(args) do
-      local tack = args[i]
-      local value = args[i+1]
-      if flag:match(v) then
-        log.debug("Removing hardware flag: '" .. tack .. " " .. value .. "'")
-        table.remove(args, (i+1))
-        table.remove(args, i)
+  for _, rf in ipairs(ffmpeg.remove_flags) do
+    for f, v, pair in parse.arg_itr(args) do
+      if f:match(rf) then
+        log.debug("Removing hardware flag: '" .. f .. " " .. v .. "'")
+        pair.value = ""
       end
     end
   end
-  -- Switch certain flags to software safe values
-  for k, v in pairs(ffmpeg.switch_flags) do
-    for i, flag in ipairs(args) do
-      if flag:match(k) then
-        local tack = args[i]
-        local value = args[i+1]
-        log.debug("Switching hardware flag: '" .. tack .. " " .. value .. " to " .. v .. "'")
-        args[i+1] = v
+  -- Change certain flags to software safe values
+  for k, sf in pairs(ffmpeg.switch_flags) do
+    for f, v, pair in parse.arg_itr(args) do
+      if f:match(k) and (hardware ~= "") then
+        log.debug("Changing hardware flag: '" .. f .. " " .. v .. " to " .. sf .. "'")
+        pair.value = sf
       end
     end
   end
@@ -62,8 +60,11 @@ end
 -- Run a command locally
 function ffmpeg.local_ffmpeg(cmd, args)
   local call_args = { cmd }
-  for _, arg in ipairs(args) do
-    table.insert(call_args, arg)
+  for f, v in parse.arg_itr(args) do
+    if v ~= "" then
+      table.insert(call_args, f)
+      table.insert(call_args, v)
+    end
   end
   local code = posix.spawn(call_args)
   if code ~= 0 then
@@ -75,20 +76,18 @@ end
 
 -- The FFmpeg command to run
 function ffmpeg.cmd(cfg, args)
-  args[0] = nil
-  log.info("[" .. cfg.mode .. "] Received '" .. table.concat(args, " ") .. "'")
-  -- Remove cmd from args table
+  log.info("[" .. cfg.mode .. "] Received '" .. parse.arg_concat(args, " ") .. "'")
   local cmd = cfg.ffmpeg_path
   if string.lower(cfg.mode) == "ffprobe" then
     cmd = cfg.ffprobe_path
   end
   local flags = ffmpeg.rewrite_paths(cfg, args)
-  log.info("[" .. cfg.mode .. "] Sending '" .. table.concat(flags, " ") .. "'")
+  log.info("[" .. cfg.mode .. "] Sending '" .. parse.arg_concat(flags, " ") .. "'")
   local session = ssh.cmd(cfg, cmd, flags)
   if not session then
     log.warn("Remote FFmpeg command failed, running locally...")
     flags = ffmpeg.no_hardware(args)
-    log.info("[" .. cfg.mode .. " local fallback ] Sending '" .. table.concat(flags, " ") .. "'")
+    log.info("[" .. cfg.mode .. " fallback] Sending '" .. parse.arg_concat(flags, " ") .. "'")
     session = ffmpeg.local_ffmpeg(cmd, flags)
   end
   return session
