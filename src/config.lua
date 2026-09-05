@@ -10,7 +10,7 @@ config.ssh_id =  os.getenv("OUTSOURCE_SSH_ID") or (os.getenv("HOME") .. "/.ssh/i
 
 config.ffmpeg_path = os.getenv("OUTSOURCE_FFMPEG_PATH") or "/usr/bin/ffmpeg"
 config.ffprobe_path = os.getenv("OUTSOURCE_FFPROBE_PATH") or "/usr/bin/ffprobe"
-config.ffmpeg_fallback_path = os.getenv("OUTSOURCE_FFMPEG_ALLBACK_PATH") or "/usr/bin/ffmpeg"
+config.ffmpeg_fallback_path = os.getenv("OUTSOURCE_FFMPEG_FALLBACK_PATH") or "/usr/bin/ffmpeg"
 config.ffprobe_fallback_path = os.getenv("OUTSOURCE_FFPROBE_FALLBACK_PATH") or "/usr/bin/ffprobe"
 
 config.map_dirs = os.getenv("OUTSOURCE_MAP_DIRS") or ";"
