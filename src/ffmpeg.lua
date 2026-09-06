@@ -34,21 +34,21 @@ end
 
 -- The ffmpeg command to run
 function ffmpeg.cmd(cfg, args)
-  args[0] = nil
   log.info("[" .. cfg.mode .. "] Received '" .. table.concat(args, " ") .. "'")
-  -- Remove cmd from args table
   local cmd = cfg.ffmpeg_path
+  local fallback_cmd = cfg.ffmpeg_fallback_path
   if string.lower(cfg.mode) == "ffprobe" then
     cmd = cfg.ffprobe_path
+    fallback_cmd = cfg.ffprobe_fallback_path
   end
   local flags = ffmpeg.rewrite_paths(cfg, args)
   log.info("[" .. cfg.mode .. "] Sending '" .. table.concat(flags, " ") .. "'")
-  local session = ssh.cmd(cfg, cmd, flags)
-  if not session then
+  local success = ssh.cmd(cfg, cmd, flags)
+  if not success then
     log.warn("Remote FFmpeg command failed, running locally...")
-    session = ffmpeg.local_ffmpeg(cmd, flags)
+    success = ffmpeg.local_ffmpeg(fallback_cmd, flags)
   end
-  return session
+  return success
 end
 
 return ffmpeg
